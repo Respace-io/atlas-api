@@ -130,7 +130,7 @@ java {
 }
 tasks.register('apiJar', Jar) {
     archiveClassifier.set('api')
-    include 'io/redspace/atlasapi/api/*'
+    include 'io/redspace/atlasapi/api/**/*'
     from sourceSets.main.allSource
     from sourceSets.main.output
 }
