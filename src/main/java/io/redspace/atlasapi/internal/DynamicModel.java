@@ -5,8 +5,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.mojang.math.Transformation;
 import io.redspace.atlasapi.AtlasApi;
-import io.redspace.atlasapi.api.ModelType;
-import io.redspace.atlasapi.api.ModelTypeRegistry;
+import io.redspace.atlasapi.api.AssetHandler;
+import io.redspace.atlasapi.api.AssetHandlerRegistry;
+import io.redspace.atlasapi.api.data.BakingPreparations;
+import io.redspace.atlasapi.api.data.ModelLayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.RenderType;
@@ -41,23 +43,22 @@ import java.util.Objects;
 import java.util.function.Function;
 
 public class DynamicModel implements IUnbakedGeometry<DynamicModel> {
-    final ModelType type;
+    final AssetHandler handler;
 
-    public DynamicModel(ModelType type) {
-        this.type = type;
+    public DynamicModel(AssetHandler handler) {
+        this.handler = handler;
     }
 
     @Override
     public BakedModel bake(IGeometryBakingContext context, ModelBaker baker, Function<Material, TextureAtlasSprite> spriteGetter, ModelState modelState, ItemOverrides overrides) {
-        return new BakedHolder(type, context, baker, modelState);
+        return new BakedHolder(handler, context, baker, modelState);
     }
 
     public static class BakedHolder implements BakedModel {
         BakedModel model;
         ItemOverrides overrides;
-        ModelType type;
 
-        public BakedHolder(ModelType type, IGeometryBakingContext context, ModelBaker baker, ModelState modelState) {
+        public BakedHolder(AssetHandler handler, IGeometryBakingContext context, ModelBaker baker, ModelState modelState) {
             this.model = Minecraft.getInstance().getModelManager().getMissingModel();
             var blockmodel = (BlockModel) baker.getModel(ModelBakery.MISSING_MODEL_LOCATION);
             this.overrides = new ItemOverrides(baker, blockmodel,
@@ -66,8 +67,8 @@ public class DynamicModel implements IUnbakedGeometry<DynamicModel> {
                 @Nullable
                 @Override
                 public BakedModel resolve(BakedModel pModel, ItemStack pStack, @Nullable ClientLevel pLevel, @Nullable LivingEntity pEntity, int pSeed) {
-                    int id = type.modelId(pStack, pLevel, pEntity, pSeed);
-                    return AtlasHandler.MODEL_CACHE.computeIfAbsent(id, (i) -> bake(type, type.makePreparations(pStack, pLevel, pEntity, pSeed), context, modelState, new ItemOverrides(baker, blockmodel, List.of(), baker.getModelTextureGetter())));
+                    int id = handler.modelId(pStack, pLevel, pEntity, pSeed);
+                    return AtlasHandler.MODEL_CACHE.computeIfAbsent(id, (i) -> bake(handler, handler.makeBakedModelPreparations(pStack, pLevel, pEntity, pSeed), context, modelState, new ItemOverrides(baker, blockmodel, List.of(), baker.getModelTextureGetter())));
                 }
             };
         }
@@ -108,10 +109,10 @@ public class DynamicModel implements IUnbakedGeometry<DynamicModel> {
         }
     }
 
-    public static BakedModel bake(ModelType type, ModelType.BakingPreparations preparations, IGeometryBakingContext context, ModelState modelState, ItemOverrides overrides) {
+    public static BakedModel bake(AssetHandler handler, BakingPreparations preparations, IGeometryBakingContext context, ModelState modelState, ItemOverrides overrides) {
         AtlasApi.LOGGER.debug("JewelryModel bake: {}", preparations);
-        var atlas = AtlasHandler.getAtlas(type.getAtlasLocation());
-        var layers = preparations.layers().stream().sorted(Comparator.comparingInt(ModelType.Layer::drawOrder)).toList();
+        var atlas = AtlasHandler.getAtlas(handler.getAtlasLocation());
+        var layers = preparations.layers().stream().sorted(Comparator.comparingInt(ModelLayer::drawOrder)).toList();
         if (!layers.isEmpty()) {
             TextureAtlasSprite particle = atlas.getSprite(layers.getFirst().sprite());
             CompositeModel.Baked.Builder builder = CompositeModel.Baked.builder(context, particle, overrides, context.getTransforms());
@@ -130,7 +131,7 @@ public class DynamicModel implements IUnbakedGeometry<DynamicModel> {
 
                 List<BlockElement> unbaked = UnbakedGeometryHelper.createUnbakedItemElements(i, sprite);
                 List<BakedQuad> quads = UnbakedGeometryHelper.bakeElements(unbaked, (material2) -> sprite, subState);
-                RenderTypeGroup renderTypes = new RenderTypeGroup(RenderType.solid(), NeoForgeRenderTypes.getUnsortedTranslucent(type.getAtlasLocation()));
+                RenderTypeGroup renderTypes = new RenderTypeGroup(RenderType.solid(), NeoForgeRenderTypes.getUnsortedTranslucent(handler.getAtlasLocation()));
 
                 builder.addQuads(renderTypes, quads);
             }
@@ -149,8 +150,8 @@ public class DynamicModel implements IUnbakedGeometry<DynamicModel> {
         @Override
         public DynamicModel read(JsonObject jsonObject, JsonDeserializationContext deserializationContext) {
             try {
-                String typestring = jsonObject.get("type").getAsString();
-                ModelType type = Objects.requireNonNull(ModelTypeRegistry.MODEL_TYPE_REGISTRY.get(ResourceLocation.parse(typestring)));
+                String typestring = jsonObject.get("handler").getAsString();
+                AssetHandler type = Objects.requireNonNull(AssetHandlerRegistry.ASSET_HANDLER_REGISTRY.get(ResourceLocation.parse(typestring)));
                 return new DynamicModel(type);
             } catch (Exception e) {
                 throw new JsonParseException(e.getMessage());

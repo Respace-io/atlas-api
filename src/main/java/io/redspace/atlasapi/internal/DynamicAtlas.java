@@ -2,7 +2,7 @@ package io.redspace.atlasapi.internal;
 
 import com.google.common.collect.ImmutableList;
 import io.redspace.atlasapi.AtlasApi;
-import io.redspace.atlasapi.api.ModelType;
+import io.redspace.atlasapi.api.AssetHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.*;
 import net.minecraft.client.renderer.texture.atlas.SpriteResourceLoader;
@@ -24,11 +24,11 @@ public class DynamicAtlas extends TextureAtlas {
         }
     }
 
-    final ModelType type;
+    final AssetHandler handler;
 
-    public DynamicAtlas(ModelType type, TextureManager pTextureManager) {
-        super(type.getAtlasLocation());
-        this.type = type;
+    public DynamicAtlas(AssetHandler handler, TextureManager pTextureManager) {
+        super(handler.getAtlasLocation());
+        this.handler = handler;
         pTextureManager.register(this.location(), this);
     }
 
@@ -36,7 +36,7 @@ public class DynamicAtlas extends TextureAtlas {
         AtlasApi.LOGGER.info("Atlas {}: Building custom contents start", this.location());
         var loader = SpriteLoader.create(this);
         SpriteResourceLoader spriteresourceloader = SpriteResourceLoader.create(SpriteLoader.DEFAULT_METADATA_SECTIONS);
-        List<SpriteSource> sources = type.buildSpriteSources();
+        List<SpriteSource> sources = handler.buildSpriteSources();
         var factories = list(sources, Minecraft.getInstance().getResourceManager());
         List<SpriteContents> contents = factories.stream().map(factory -> factory.apply(spriteresourceloader)).filter(Objects::nonNull).toList();
         var preparations = loader.stitch(contents, 0, Runnable::run);

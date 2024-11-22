@@ -14,7 +14,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.registries.NewRegistryEvent;
 import org.slf4j.Logger;
 
-import static io.redspace.atlasapi.api.ModelTypeRegistry.MODEL_TYPE_REGISTRY;
+import static io.redspace.atlasapi.api.AssetHandlerRegistry.ASSET_HANDLER_REGISTRY;
 
 @Mod(AtlasApi.MODID)
 public class AtlasApi {
@@ -33,7 +33,7 @@ public class AtlasApi {
     }
 
     public void registerRegistries(NewRegistryEvent event) {
-        event.register(MODEL_TYPE_REGISTRY);
+        event.register(ASSET_HANDLER_REGISTRY);
     }
 
     public void registerClientListeners(RegisterClientReloadListenersEvent event) {
