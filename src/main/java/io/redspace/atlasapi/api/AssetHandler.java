@@ -11,15 +11,31 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Objects;
 
 /**
- * Entrypoint for users of the AtlasAPI.
- * This class must be implemented and registered (via deferred register of registry {@link AssetHandlerRegistry#ASSET_HANDLER_REGISTRY})
- * Your singleton of this class is used to keep track of your dynamic atlas, provide instructions for generating said atlas, and finally provide instructions for assembling baked models using that atlas.
+ * Entrypoint for users of the AtlasAPI, used to keep track of your dynamic atlas, provide instructions for generating said atlas, and provide instructions for assembling baked models using that atlas.
+ * <p>
+ * <p>
+ * This class must be implemented and registered (via deferred register of registry {@link AtlasApiRegistry#ASSET_HANDLER_REGISTRY}).
+ * Each registered AssetsHandler automatically has a Dynamic Atlas prepared for it.
+ * <p>
+ * <p>
+ * In order for an item to use these sprites in game, the item's model definition must use the <code>atlas_api:dynamic_model</code> geometry loader, and provide the resourcelocation to your registered handler.
+ * For example:
+ * {@code
+ * {
+ * "parent": "minecraft:item/generated",
+ * "loader": "atlas_api:dynamic_model",
+ * "handler": "examplemod:my_handler"
+ * }
+ * }
+ * This then uses your {@code makeBakedModelPreparations} to prepare and bake the models for that item.
  */
 public abstract class AssetHandler {
     /**
      * @return List of {@link SpriteSource} to be stitched into an atlas. This is called on the first query of an atlas during gameplay, and cannot be changed until world relog or texture reload.
+     * The resource locations you provide here will be the resource locations you must use to access the sprites later
      */
     @NotNull
     public abstract List<SpriteSource> buildSpriteSources();
@@ -31,7 +47,7 @@ public abstract class AssetHandler {
      * @param clientLevel
      * @param livingEntity
      * @param seed
-     * @return {@link BakingPreparations} to be used to bake a unique model
+     * @return {@link BakingPreparations} to be used to bake a new model
      */
     @NotNull
     public abstract BakingPreparations makeBakedModelPreparations(ItemStack itemStack, @Nullable ClientLevel clientLevel, @Nullable LivingEntity livingEntity, int seed);
@@ -40,7 +56,7 @@ public abstract class AssetHandler {
      * @return The location of the dynamic atlas associated with this registered AtlasHandler
      */
     public final ResourceLocation getAtlasLocation() {
-        return AssetHandlerRegistry.ASSET_HANDLER_REGISTRY.getKey(this);
+        return Objects.requireNonNull(AtlasApiRegistry.ASSET_HANDLER_REGISTRY.getKey(this)).withPrefix("atlas/");
     }
 
     /**

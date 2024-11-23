@@ -1,6 +1,6 @@
 package io.redspace.atlasapi.internal;
 
-import io.redspace.atlasapi.api.AssetHandlerRegistry;
+import io.redspace.atlasapi.api.AtlasApiRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.resources.ResourceLocation;
@@ -35,7 +35,7 @@ public class AtlasHandler implements PreparableReloadListener {
     }
 
     public static DynamicAtlas getAtlas(ResourceLocation resourceLocation) {
-        return ATLASES.computeIfAbsent(resourceLocation, r -> new DynamicAtlas(Objects.requireNonNull(AssetHandlerRegistry.ASSET_HANDLER_REGISTRY.get(r)), Minecraft.getInstance().getTextureManager()));
+        return ATLASES.computeIfAbsent(resourceLocation, r -> new DynamicAtlas(Objects.requireNonNull(AtlasApiRegistry.ASSET_HANDLER_REGISTRY.get(r)), Minecraft.getInstance().getTextureManager()));
     }
 
     public static void clear() {

@@ -6,7 +6,7 @@ import com.google.gson.JsonParseException;
 import com.mojang.math.Transformation;
 import io.redspace.atlasapi.AtlasApi;
 import io.redspace.atlasapi.api.AssetHandler;
-import io.redspace.atlasapi.api.AssetHandlerRegistry;
+import io.redspace.atlasapi.api.AtlasApiRegistry;
 import io.redspace.atlasapi.api.data.BakingPreparations;
 import io.redspace.atlasapi.api.data.ModelLayer;
 import net.minecraft.client.Minecraft;
@@ -151,7 +151,7 @@ public class DynamicModel implements IUnbakedGeometry<DynamicModel> {
         public DynamicModel read(JsonObject jsonObject, JsonDeserializationContext deserializationContext) {
             try {
                 String typestring = jsonObject.get("handler").getAsString();
-                AssetHandler type = Objects.requireNonNull(AssetHandlerRegistry.ASSET_HANDLER_REGISTRY.get(ResourceLocation.parse(typestring)));
+                AssetHandler type = Objects.requireNonNull(AtlasApiRegistry.ASSET_HANDLER_REGISTRY.get(ResourceLocation.parse(typestring)));
                 return new DynamicModel(type);
             } catch (Exception e) {
                 throw new JsonParseException(e.getMessage());

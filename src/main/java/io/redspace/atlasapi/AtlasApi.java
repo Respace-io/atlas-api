@@ -14,7 +14,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.registries.NewRegistryEvent;
 import org.slf4j.Logger;
 
-import static io.redspace.atlasapi.api.AssetHandlerRegistry.ASSET_HANDLER_REGISTRY;
+import static io.redspace.atlasapi.api.AtlasApiRegistry.ASSET_HANDLER_REGISTRY;
 
 @Mod(AtlasApi.MODID)
 public class AtlasApi {
