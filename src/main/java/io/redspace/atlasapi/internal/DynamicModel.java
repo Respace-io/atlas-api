@@ -111,7 +111,7 @@ public class DynamicModel implements IUnbakedGeometry<DynamicModel> {
 
     public static BakedModel bake(AssetHandler handler, BakingPreparations preparations, IGeometryBakingContext context, ModelState modelState, ItemOverrides overrides) {
         AtlasApi.LOGGER.debug("JewelryModel bake: {}", preparations);
-        var atlas = AtlasHandler.getAtlas(handler.getAtlasLocation());
+        var atlas = AtlasHandler.getAtlas(handler);
         var layers = preparations.layers().stream().sorted(Comparator.comparingInt(ModelLayer::drawOrder)).toList();
         if (!layers.isEmpty()) {
             TextureAtlasSprite particle = atlas.getSprite(layers.getFirst().sprite());
