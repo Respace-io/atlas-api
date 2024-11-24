@@ -1,7 +1,6 @@
 package io.redspace.atlasapi.internal;
 
 import io.redspace.atlasapi.api.AssetHandler;
-import io.redspace.atlasapi.api.AtlasApiRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.resources.ResourceLocation;
@@ -11,7 +10,6 @@ import net.minecraft.util.profiling.ProfilerFiller;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 

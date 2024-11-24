@@ -1,19 +1,15 @@
 package io.redspace.atlasapi.internal;
 
-import com.google.common.collect.ImmutableList;
 import io.redspace.atlasapi.AtlasApi;
 import io.redspace.atlasapi.api.AssetHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.*;
 import net.minecraft.client.renderer.texture.atlas.SpriteResourceLoader;
-import net.minecraft.client.renderer.texture.atlas.SpriteSource;
 import net.minecraft.client.renderer.texture.atlas.SpriteSourceList;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.ResourceManager;
 
-import java.util.*;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.List;
+import java.util.Objects;
 
 public class DynamicAtlas extends TextureAtlas {
     public boolean hasBuilt = false;

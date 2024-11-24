@@ -16,13 +16,12 @@ import java.util.Objects;
 /**
  * Entrypoint for users of the AtlasAPI, used to keep track of your dynamic atlas, provide instructions for generating said atlas, and provide instructions for assembling baked models using that atlas.
  * <p>
- * <p>
  * This class must be implemented and registered (via deferred register of registry {@link AtlasApiRegistry#ASSET_HANDLER_REGISTRY}).
  * Each registered AssetsHandler automatically has a Dynamic Atlas prepared for it.
  * <p>
- * <p>
  * In order for an item to use these sprites in game, the item's model definition must use the <code>atlas_api:dynamic_model</code> geometry loader, and provide the resourcelocation to your registered handler.
  * For example:
+ * <pre>
  * {@code
  * {
  * "parent": "minecraft:item/generated",
@@ -30,6 +29,7 @@ import java.util.Objects;
  * "handler": "examplemod:my_handler"
  * }
  * }
+ * </pre>
  * This then uses your {@code makeBakedModelPreparations} to prepare and bake the models for that item.
  */
 public abstract class AssetHandler {

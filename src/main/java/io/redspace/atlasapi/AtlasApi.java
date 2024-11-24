@@ -29,7 +29,9 @@ public class AtlasApi {
     }
 
     public void onLogOut(PlayerEvent.PlayerLoggedOutEvent event) {
-        AtlasHandler.clear();
+        if (event.getEntity().level().isClientSide) {
+            AtlasHandler.clear();
+        }
     }
 
     public void registerRegistries(NewRegistryEvent event) {
