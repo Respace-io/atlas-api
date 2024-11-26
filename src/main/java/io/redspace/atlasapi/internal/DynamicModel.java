@@ -19,6 +19,8 @@ import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.*;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
@@ -39,13 +41,12 @@ import org.joml.Vector3f;
 import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 
 public class DynamicModel implements IUnbakedGeometry<DynamicModel> {
-    final AssetHandler handler;
+    final Holder<AssetHandler> handler;
 
-    public DynamicModel(AssetHandler handler) {
+    public DynamicModel(Holder<AssetHandler> handler) {
         this.handler = handler;
     }
 
@@ -58,7 +59,7 @@ public class DynamicModel implements IUnbakedGeometry<DynamicModel> {
         BakedModel model;
         ItemOverrides overrides;
 
-        public BakedHolder(AssetHandler handler, IGeometryBakingContext context, ModelBaker baker, ModelState modelState) {
+        public BakedHolder(Holder<AssetHandler> handler, IGeometryBakingContext context, ModelBaker baker, ModelState modelState) {
             this.model = Minecraft.getInstance().getModelManager().getMissingModel();
             var blockmodel = (BlockModel) baker.getModel(ModelBakery.MISSING_MODEL_LOCATION);
             this.overrides = new ItemOverrides(baker, blockmodel,
@@ -67,8 +68,9 @@ public class DynamicModel implements IUnbakedGeometry<DynamicModel> {
                 @Nullable
                 @Override
                 public BakedModel resolve(BakedModel pModel, ItemStack pStack, @Nullable ClientLevel pLevel, @Nullable LivingEntity pEntity, int pSeed) {
-                    int id = handler.modelId(pStack, pLevel, pEntity, pSeed);
-                    return AtlasHandler.MODEL_CACHE.computeIfAbsent(id, (i) -> bake(handler, handler.makeBakedModelPreparations(pStack, pLevel, pEntity, pSeed), context, modelState, new ItemOverrides(baker, blockmodel, List.of(), baker.getModelTextureGetter())));
+                    var value = handler.value();
+                    int id = value.modelId(pStack, pLevel, pEntity, pSeed);
+                    return AtlasHandler.getModelOrCompute(handler.getKey().location(), id, (i) -> bake(value, value.makeBakedModelPreparations(pStack, pLevel, pEntity, pSeed), context, modelState, new ItemOverrides(baker, blockmodel, List.of(), baker.getModelTextureGetter())));
                 }
             };
         }
@@ -114,13 +116,13 @@ public class DynamicModel implements IUnbakedGeometry<DynamicModel> {
         var atlas = AtlasHandler.getAtlas(handler);
         var layers = preparations.layers().stream().sorted(Comparator.comparingInt(ModelLayer::drawOrder)).toList();
         if (!layers.isEmpty()) {
-            TextureAtlasSprite particle = atlas.getSprite(layers.getFirst().sprite());
+            TextureAtlasSprite particle = atlas.getSprite(layers.getFirst().spriteLocation());
             CompositeModel.Baked.Builder builder = CompositeModel.Baked.builder(context, particle, overrides, context.getTransforms());
             Transformation rootTransform = context.getRootTransform();
             for (int i = 0; i < layers.size(); i++) {
                 var layer = layers.get(i);
 
-                TextureAtlasSprite sprite = atlas.getSprite(layer.sprite());
+                TextureAtlasSprite sprite = atlas.getSprite(layer.spriteLocation());
                 Transformation transformation = layer.transformation().orElse(new Transformation(
                         new Vector3f(0, 0, 0),
                         new Quaternionf(), new Vector3f(1, 1, 1),
@@ -151,7 +153,7 @@ public class DynamicModel implements IUnbakedGeometry<DynamicModel> {
         public DynamicModel read(JsonObject jsonObject, JsonDeserializationContext deserializationContext) {
             try {
                 String typestring = jsonObject.get("handler").getAsString();
-                AssetHandler type = Objects.requireNonNull(AtlasApiRegistry.ASSET_HANDLER_REGISTRY.get(ResourceLocation.parse(typestring)));
+                Holder<AssetHandler> type = AtlasApiRegistry.ASSET_HANDLER_REGISTRY.getHolderOrThrow(ResourceKey.create(AtlasApiRegistry.ASSET_HANDLER_REGISTRY_KEY, ResourceLocation.parse(typestring)));
                 return new DynamicModel(type);
             } catch (Exception e) {
                 throw new JsonParseException(e.getMessage());

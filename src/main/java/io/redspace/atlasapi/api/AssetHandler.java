@@ -60,7 +60,7 @@ public abstract class AssetHandler {
     }
 
     /**
-     * @return The sprite at a given resource location of this handler's associated atlas
+     * @return The spriteLocation at a given resource location of this handler's associated atlas
      */
     public TextureAtlasSprite getSprite(ResourceLocation resourceLocation) {
         return AtlasApiHelper.getAtlas(this).getSprite(resourceLocation);

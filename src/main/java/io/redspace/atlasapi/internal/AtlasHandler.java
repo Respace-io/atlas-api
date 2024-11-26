@@ -1,6 +1,7 @@
 package io.redspace.atlasapi.internal;
 
 import io.redspace.atlasapi.api.AssetHandler;
+import io.redspace.atlasapi.api.AtlasApiRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.resources.ResourceLocation;
@@ -12,10 +13,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.Function;
 
 public class AtlasHandler implements PreparableReloadListener {
     private static final Map<ResourceLocation, DynamicAtlas> ATLASES = new HashMap<>();
-    public static final HashMap<Integer, BakedModel> MODEL_CACHE = new HashMap<>();
+    private static final HashMap<ResourceLocation, HashMap<Integer, BakedModel>> MODEL_CACHE = new HashMap<>();
 
     @Override
     public CompletableFuture<Void> reload(PreparationBarrier pPreparationBarrier, ResourceManager pResourceManager, ProfilerFiller pPreparationsProfiler, ProfilerFiller pReloadProfiler, Executor pBackgroundExecutor, Executor pGameExecutor) {
@@ -31,6 +33,15 @@ public class AtlasHandler implements PreparableReloadListener {
                     }
                     MODEL_CACHE.clear();
                 });
+    }
+
+    public static BakedModel getModelOrCompute(ResourceLocation handlerId, int modelId, Function<Integer, BakedModel> bakery) {
+        //validate registry existance
+        if (!AtlasApiRegistry.ASSET_HANDLER_REGISTRY.containsKey(handlerId)) {
+            throw new IllegalStateException("Invalid Asset Handler key: " + handlerId);
+        } else {
+            return MODEL_CACHE.computeIfAbsent(handlerId, rc -> new HashMap<>()).computeIfAbsent(modelId, bakery);
+        }
     }
 
     public static DynamicAtlas getAtlas(AssetHandler assetHandler) {
