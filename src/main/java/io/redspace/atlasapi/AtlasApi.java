@@ -7,6 +7,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.common.NeoForge;
@@ -28,10 +29,8 @@ public class AtlasApi {
         NeoForge.EVENT_BUS.addListener(this::onLogOut);
     }
 
-    public void onLogOut(PlayerEvent.PlayerLoggedOutEvent event) {
-        if (event.getEntity().level().isClientSide) {
-            AtlasHandler.clear();
-        }
+    public void onLogOut(ClientPlayerNetworkEvent.LoggingOut event) {
+        AtlasHandler.clear();
     }
 
     public void registerRegistries(NewRegistryEvent event) {
