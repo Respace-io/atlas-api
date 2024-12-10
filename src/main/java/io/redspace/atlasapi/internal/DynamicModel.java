@@ -60,7 +60,7 @@ public class DynamicModel implements IUnbakedGeometry<DynamicModel> {
         ItemOverrides overrides;
 
         public BakedHolder(Holder<AssetHandler> handler, IGeometryBakingContext context, ModelBaker baker, ModelState modelState) {
-            this.model = Minecraft.getInstance().getModelManager().getMissingModel();
+            this.model = EmptyModel.BAKED;
             var blockmodel = (BlockModel) baker.getModel(ModelBakery.MISSING_MODEL_LOCATION);
             this.overrides = new ItemOverrides(baker, blockmodel,
                     List.of()
@@ -68,9 +68,9 @@ public class DynamicModel implements IUnbakedGeometry<DynamicModel> {
                 @Nullable
                 @Override
                 public BakedModel resolve(BakedModel pModel, ItemStack pStack, @Nullable ClientLevel pLevel, @Nullable LivingEntity pEntity, int pSeed) {
-                    var value = handler.value();
-                    int id = value.modelId(pStack, pLevel, pEntity, pSeed);
-                    return AtlasHandler.getModelOrCompute(handler.getKey().location(), id, (i) -> bake(value, value.makeBakedModelPreparations(pStack, pLevel, pEntity, pSeed), context, modelState, new ItemOverrides(baker, blockmodel, List.of(), baker.getModelTextureGetter())));
+                    var _handler = handler.value();
+                    int id = _handler.modelId(pStack, pLevel, pEntity, pSeed);
+                    return AtlasHandler.getModelOrCompute(handler.getKey().location(), id, (i) -> bake(_handler, _handler.makeBakedModelPreparations(pStack, pLevel, pEntity, pSeed), context, modelState, new ItemOverrides(baker, blockmodel, List.of(), baker.getModelTextureGetter())));
                 }
             };
         }

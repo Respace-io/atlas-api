@@ -103,6 +103,12 @@ dependencies {
 
     localRuntime "curse.maven:atlasviewer-633577:5490697"
     localRuntime "curse.maven:spark-361579:5759671"
+    localRuntime "io.redspace:irons_jewelry:1.0.0"
+
+    implementation "dev.shadowsoffire:ApothicAttributes:${minecraft_version}-2.2.2"
+    localRuntime "dev.shadowsoffire:Placebo:${minecraft_version}-9.3.5"
+    implementation "curse.maven:adorned-1036809:5684431"
+
 }
 
 tasks.withType(ProcessResources).configureEach {

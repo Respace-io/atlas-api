@@ -21,9 +21,7 @@ public class AtlasHandler implements PreparableReloadListener {
 
     @Override
     public CompletableFuture<Void> reload(PreparationBarrier pPreparationBarrier, ResourceManager pResourceManager, ProfilerFiller pPreparationsProfiler, ProfilerFiller pReloadProfiler, Executor pBackgroundExecutor, Executor pGameExecutor) {
-        return CompletableFuture.runAsync(() -> {
-                    //no preparations
-                }).thenCompose(pPreparationBarrier::wait)
+        return pPreparationBarrier.wait(null)
                 .thenRun(() -> {
                     for (DynamicAtlas atlas : ATLASES.values()) {
                         // If we have already built, rebuild. If not, then the game is still loading and we do nothing
