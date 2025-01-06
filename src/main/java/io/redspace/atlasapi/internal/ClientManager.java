@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 
-public class AtlasHandler implements PreparableReloadListener {
+public class ClientManager implements PreparableReloadListener {
     private static final Map<ResourceLocation, DynamicAtlas> ATLASES = new HashMap<>();
     private static final HashMap<ResourceLocation, HashMap<Integer, BakedModel>> MODEL_CACHE = new HashMap<>();
 

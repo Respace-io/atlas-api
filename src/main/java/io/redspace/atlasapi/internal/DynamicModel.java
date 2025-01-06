@@ -9,7 +9,6 @@ import io.redspace.atlasapi.api.AssetHandler;
 import io.redspace.atlasapi.api.AtlasApiRegistry;
 import io.redspace.atlasapi.api.data.BakingPreparations;
 import io.redspace.atlasapi.api.data.ModelLayer;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -70,7 +69,7 @@ public class DynamicModel implements IUnbakedGeometry<DynamicModel> {
                 public BakedModel resolve(BakedModel pModel, ItemStack pStack, @Nullable ClientLevel pLevel, @Nullable LivingEntity pEntity, int pSeed) {
                     var _handler = handler.value();
                     int id = _handler.modelId(pStack, pLevel, pEntity, pSeed);
-                    return AtlasHandler.getModelOrCompute(handler.getKey().location(), id, (i) -> bake(_handler, _handler.makeBakedModelPreparations(pStack, pLevel, pEntity, pSeed), context, modelState, new ItemOverrides(baker, blockmodel, List.of(), baker.getModelTextureGetter())));
+                    return ClientManager.getModelOrCompute(handler.getKey().location(), id, (i) -> bake(_handler, _handler.makeBakedModelPreparations(pStack, pLevel, pEntity, pSeed), context, modelState, new ItemOverrides(baker, blockmodel, List.of(), baker.getModelTextureGetter())));
                 }
             };
         }
@@ -113,7 +112,7 @@ public class DynamicModel implements IUnbakedGeometry<DynamicModel> {
 
     public static BakedModel bake(AssetHandler handler, BakingPreparations preparations, IGeometryBakingContext context, ModelState modelState, ItemOverrides overrides) {
         AtlasApi.LOGGER.debug("JewelryModel bake: {}", preparations);
-        var atlas = AtlasHandler.getAtlas(handler);
+        var atlas = ClientManager.getAtlas(handler);
         var layers = preparations.layers().stream().sorted(Comparator.comparingInt(ModelLayer::drawOrder)).toList();
         if (!layers.isEmpty()) {
             TextureAtlasSprite particle = atlas.getSprite(layers.getFirst().spriteLocation());

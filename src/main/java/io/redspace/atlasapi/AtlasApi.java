@@ -1,7 +1,7 @@
 package io.redspace.atlasapi;
 
 import com.mojang.logging.LogUtils;
-import io.redspace.atlasapi.internal.AtlasHandler;
+import io.redspace.atlasapi.internal.ClientManager;
 import io.redspace.atlasapi.internal.DynamicModel;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
@@ -11,7 +11,6 @@ import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.registries.NewRegistryEvent;
 import org.slf4j.Logger;
 
@@ -30,7 +29,7 @@ public class AtlasApi {
     }
 
     public void onLogOut(ClientPlayerNetworkEvent.LoggingOut event) {
-        AtlasHandler.clear();
+        ClientManager.clear();
     }
 
     public void registerRegistries(NewRegistryEvent event) {
@@ -38,7 +37,7 @@ public class AtlasApi {
     }
 
     public void registerClientListeners(RegisterClientReloadListenersEvent event) {
-        event.registerReloadListener(new AtlasHandler());
+        event.registerReloadListener(new ClientManager());
     }
 
     public void registerModelLoader(ModelEvent.RegisterGeometryLoaders event) {
