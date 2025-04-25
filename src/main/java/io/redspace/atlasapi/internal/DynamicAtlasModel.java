@@ -13,18 +13,17 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockElement;
-import net.minecraft.client.renderer.block.model.BlockModel;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.model.*;
-import net.minecraft.core.Direction;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.Material;
+import net.minecraft.client.resources.model.ModelBaker;
+import net.minecraft.client.resources.model.ModelState;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.NeoForgeRenderTypes;
 import net.neoforged.neoforge.client.RenderTypeGroup;
 import net.neoforged.neoforge.client.model.CompositeModel;
@@ -42,72 +41,20 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
-public class DynamicModel implements IUnbakedGeometry<DynamicModel> {
+public class DynamicAtlasModel implements IUnbakedGeometry<DynamicAtlasModel> {
     final Holder<AssetHandler> handler;
 
-    public DynamicModel(Holder<AssetHandler> handler) {
+    public DynamicAtlasModel(Holder<AssetHandler> handler) {
         this.handler = handler;
     }
 
     @Override
     public BakedModel bake(IGeometryBakingContext context, ModelBaker baker, Function<Material, TextureAtlasSprite> spriteGetter, ModelState modelState, ItemOverrides overrides) {
-        return new BakedHolder(handler, context, baker, modelState);
-    }
-
-    public static class BakedHolder implements BakedModel {
-        BakedModel model;
-        ItemOverrides overrides;
-
-        public BakedHolder(Holder<AssetHandler> handler, IGeometryBakingContext context, ModelBaker baker, ModelState modelState) {
-            this.model = EmptyModel.BAKED;
-            var blockmodel = (BlockModel) baker.getModel(ModelBakery.MISSING_MODEL_LOCATION);
-            this.overrides = new ItemOverrides(baker, blockmodel,
-                    List.of()
-                    , baker.getModelTextureGetter()) {
-                @Nullable
-                @Override
-                public BakedModel resolve(BakedModel pModel, ItemStack pStack, @Nullable ClientLevel pLevel, @Nullable LivingEntity pEntity, int pSeed) {
-                    var _handler = handler.value();
-                    int id = _handler.modelId(pStack, pLevel, pEntity, pSeed);
-                    return ClientManager.getModelOrCompute(handler.getKey().location(), id, (i) -> bake(_handler, _handler.makeBakedModelPreparations(pStack, pLevel, pEntity, pSeed), context, modelState, new ItemOverrides(baker, blockmodel, List.of(), baker.getModelTextureGetter())));
-                }
-            };
-        }
-
-        @Override
-        public List<BakedQuad> getQuads(@Nullable BlockState pState, @Nullable Direction pDirection, RandomSource pRandom) {
-            return model.getQuads(pState, pDirection, pRandom);
-        }
-
-        @Override
-        public boolean useAmbientOcclusion() {
-            return model.useAmbientOcclusion();
-        }
-
-        @Override
-        public boolean isGui3d() {
-            return model.isGui3d();
-        }
-
-        @Override
-        public boolean usesBlockLight() {
-            return model.usesBlockLight();
-        }
-
-        @Override
-        public boolean isCustomRenderer() {
-            return model.isCustomRenderer();
-        }
-
-        @Override
-        public TextureAtlasSprite getParticleIcon() {
-            return model.getParticleIcon();
-        }
-
-        @Override
-        public ItemOverrides getOverrides() {
-            return overrides;
-        }
+        return new PassthroughBakedModel((BakedModel pModel, ItemStack pStack, @Nullable ClientLevel pLevel, @Nullable LivingEntity pEntity, int pSeed) -> {
+            var _handler = handler.value();
+            int id = _handler.modelId(pStack, pLevel, pEntity, pSeed);
+            return ClientManager.getModelOrCompute(handler.getKey().location(), id, (i) -> bake(_handler, _handler.makeBakedModelPreparations(pStack, pLevel, pEntity, pSeed), context, modelState, overrides));
+        }, baker);
     }
 
     public static BakedModel bake(AssetHandler handler, BakingPreparations preparations, IGeometryBakingContext context, ModelState modelState, ItemOverrides overrides) {
@@ -142,18 +89,18 @@ public class DynamicModel implements IUnbakedGeometry<DynamicModel> {
 
     }
 
-    public static final class Loader implements IGeometryLoader<DynamicModel> {
+    public static final class Loader implements IGeometryLoader<DynamicAtlasModel> {
         public static final Loader INSTANCE = new Loader();
 
         private Loader() {
         }
 
         @Override
-        public DynamicModel read(JsonObject jsonObject, JsonDeserializationContext deserializationContext) {
+        public DynamicAtlasModel read(JsonObject jsonObject, JsonDeserializationContext deserializationContext) {
             try {
                 String typestring = jsonObject.get("handler").getAsString();
                 Holder<AssetHandler> type = AtlasApiRegistry.ASSET_HANDLER_REGISTRY.getHolderOrThrow(ResourceKey.create(AtlasApiRegistry.ASSET_HANDLER_REGISTRY_KEY, ResourceLocation.parse(typestring)));
-                return new DynamicModel(type);
+                return new DynamicAtlasModel(type);
             } catch (Exception e) {
                 throw new JsonParseException(e.getMessage());
             }

@@ -3,7 +3,7 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.0.145'
+    id 'net.neoforged.gradle.userdev' version '7.0.170'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -27,12 +27,21 @@ repositories {
         url = "https://code.redspace.io/releases"
     }
     maven {
+        url = "https://code.redspace.io/snapshots"
+    }
+    maven {
         // Shadows (Attribute Lib)
         url "https://maven.shadowsoffire.dev/releases"
         content {
             includeGroup "dev.shadowsoffire"
         }
     }
+    maven {
+        name = "Illusive Soulworks maven"
+        url = "https://maven.theillusivec4.top/"
+    }
+
+    maven { url = "https://maven.blamejared.com" }
 }
 
 base {
@@ -103,11 +112,10 @@ dependencies {
 
     localRuntime "curse.maven:atlasviewer-633577:5490697"
     localRuntime "curse.maven:spark-361579:5759671"
-    localRuntime "io.redspace:irons_jewelry:1.0.0"
-
-    implementation "dev.shadowsoffire:ApothicAttributes:${minecraft_version}-2.2.2"
-    localRuntime "dev.shadowsoffire:Placebo:${minecraft_version}-9.3.5"
-    implementation "curse.maven:adorned-1036809:5684431"
+    localRuntime "io.redspace:irons_jewelry:1.21.1-1.1.0"
+    localRuntime "top.theillusivec4.curios:curios-neoforge:9.2.2+1.21.1"
+    localRuntime "dev.shadowsoffire:Placebo:1.21.1-9.6.1"
+    localRuntime "dev.shadowsoffire:ApothicAttributes:1.21.1-2.5.0"
 
 }
 

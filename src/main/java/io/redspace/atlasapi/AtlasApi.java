@@ -2,7 +2,8 @@ package io.redspace.atlasapi;
 
 import com.mojang.logging.LogUtils;
 import io.redspace.atlasapi.internal.ClientManager;
-import io.redspace.atlasapi.internal.DynamicModel;
+import io.redspace.atlasapi.internal.DynamicAtlasModel;
+import io.redspace.atlasapi.internal.SimpleAtlasModel;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -26,10 +27,15 @@ public class AtlasApi {
         modEventBus.addListener(this::registerClientListeners);
         modEventBus.addListener(this::registerRegistries);
         NeoForge.EVENT_BUS.addListener(this::onLogOut);
+        NeoForge.EVENT_BUS.addListener(this::onLogIn);
     }
 
     public void onLogOut(ClientPlayerNetworkEvent.LoggingOut event) {
         ClientManager.clear();
+    }
+
+    public void onLogIn(ClientPlayerNetworkEvent.LoggingIn event) {
+        ASSET_HANDLER_REGISTRY.stream().forEach(handler -> ClientManager.getAtlas(handler).buildCustomContents());
     }
 
     public void registerRegistries(NewRegistryEvent event) {
@@ -41,7 +47,8 @@ public class AtlasApi {
     }
 
     public void registerModelLoader(ModelEvent.RegisterGeometryLoaders event) {
-        event.register(id("dynamic_model"), DynamicModel.Loader.INSTANCE);
+        event.register(id("dynamic_model"), DynamicAtlasModel.Loader.INSTANCE);
+        event.register(id("simple_model"), SimpleAtlasModel.Loader.INSTANCE);
     }
 
     public static ResourceLocation id(String path) {
