@@ -62,10 +62,16 @@ public class PassthroughBakedModel implements BakedModel {
         this.handler = handler;
         var blockmodel = (BlockModel) baker.getModel(ModelBakery.MISSING_MODEL_LOCATION);
         BiConsumer<BakedModel, BakedModelSupplier.Context> rasterizeCallback = (baked, ctx) -> {
-            // set flag, cache model, and resolve children overrides (ie bow pulling modelstates)
+            /* On Callback:
+             * - cache model
+             * - set cache flag
+             * - resolve potential children overrides (ie bow pulling modelstates)
+             *     - necessary for nested PassthroughBakedModels, as overrides do not recurse by default
+             * - release memory stored by `overrides`. Has many nested static lambdas */
             rasterized = true;
             this.model = baked;
             this.model.getOverrides().getOverrides().forEach(ovr -> resolveChild(ovr, ctx));
+            this.overrides = null;
         };
         this.overrides = new ItemOverrides(baker, blockmodel,
                 List.of()
@@ -74,18 +80,7 @@ public class PassthroughBakedModel implements BakedModel {
             @Override
             public BakedModel resolve(BakedModel pModel, ItemStack pStack, @Nullable ClientLevel pLevel, @Nullable LivingEntity pEntity, int pSeed) {
                 var ctx = new BakedModelSupplier.Context(pModel, pStack, pLevel, pEntity, pSeed);
-                // resolve supplier logic
                 var model = modelSupplier.get(ctx);
-                // iterate through the potential chain of model overrides (ie bow pulling modelstates)
-                BakedModel lastModel = null;
-                int itr = 8;
-                do {
-                    if (model == null || --itr == 0) {
-                        return lastModel;
-                    }
-                    lastModel = model;
-                    model = model.getOverrides().resolve(model, pStack, pLevel, pEntity, pSeed);
-                } while (model != lastModel); // iterate while iterations have an effect
                 rasterizeCallback.accept(model, ctx);
                 return model;
             }
@@ -124,7 +119,8 @@ public class PassthroughBakedModel implements BakedModel {
 
     @Override
     public @NotNull ItemOverrides getOverrides() {
-        // if our model is not yet rasterized, call for our customize override object, which will resolve the model
+        // if we are not yet rasterized, our base model is empty
+        // return `overrides`, which handles model rasterization
         return rasterized ? model.getOverrides() : overrides;
     }
 
