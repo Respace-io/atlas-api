@@ -1,6 +1,7 @@
 package io.redspace.atlasapi;
 
 import com.mojang.logging.LogUtils;
+import io.redspace.atlasapi.api.AtlasApiHelper;
 import io.redspace.atlasapi.internal.ClientManager;
 import io.redspace.atlasapi.internal.DynamicAtlasModel;
 import io.redspace.atlasapi.internal.SimpleAtlasModel;
@@ -17,9 +18,8 @@ import org.slf4j.Logger;
 
 import static io.redspace.atlasapi.api.AtlasApiRegistry.ASSET_HANDLER_REGISTRY;
 
-@Mod(AtlasApi.MODID)
+@Mod(AtlasApiHelper.Constants.ATLAS_API_MODID)
 public class AtlasApi {
-    public static final String MODID = "atlas_api";
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public AtlasApi(IEventBus modEventBus, ModContainer modContainer) {
@@ -52,6 +52,6 @@ public class AtlasApi {
     }
 
     public static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath(AtlasApi.MODID, path);
+        return ResourceLocation.fromNamespaceAndPath(AtlasApiHelper.Constants.ATLAS_API_MODID, path);
     }
 }

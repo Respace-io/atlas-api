@@ -60,7 +60,6 @@ public class PassthroughBakedModel implements BakedModel {
             @Nullable
             @Override
             public BakedModel resolve(BakedModel pModel, ItemStack pStack, @Nullable ClientLevel pLevel, @Nullable LivingEntity pEntity, int pSeed) {
-//                AtlasApi.LOGGER.debug("{} BRRRRT", pEntity == null ? -1 : pEntity.tickCount);
                 var ctx = new BakedModelSupplier.Context(pModel, pStack, pLevel, pEntity, pSeed);
                 var model = modelSupplier.get(ctx);
                 BakedModel lastModel = null;
