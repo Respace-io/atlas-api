@@ -25,8 +25,20 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+/**
+ * A BakedModel that acts as a lazy-loaded holder for a given BakedModelSupplier
+ * Supplier is accessed and cached on first itemstack-sensitive render
+ * Passes all method calls through to the cached model
+ */
 public class PassthroughBakedModel implements BakedModel {
+
+    /**
+     * Proxy function for resolving via {@link net.minecraft.client.renderer.block.model.ItemOverrides#resolve(BakedModel, ItemStack, ClientLevel, LivingEntity, int)}
+     */
     public interface BakedModelSupplier {
+        /**
+         * Packaged method parameters from {@link net.minecraft.client.renderer.block.model.ItemOverrides#resolve(BakedModel, ItemStack, ClientLevel, LivingEntity, int)}
+         */
         record Context(BakedModel pModel, ItemStack pStack, @Nullable ClientLevel pLevel,
                        @Nullable LivingEntity pEntity, int pSeed) {
         }
@@ -50,6 +62,7 @@ public class PassthroughBakedModel implements BakedModel {
         this.handler = handler;
         var blockmodel = (BlockModel) baker.getModel(ModelBakery.MISSING_MODEL_LOCATION);
         BiConsumer<BakedModel, BakedModelSupplier.Context> rasterizeCallback = (baked, ctx) -> {
+            // set flag, cache model, and resolve children overrides (ie bow pulling modelstates)
             rasterized = true;
             this.model = baked;
             this.model.getOverrides().getOverrides().forEach(ovr -> resolveChild(ovr, ctx));
@@ -61,7 +74,9 @@ public class PassthroughBakedModel implements BakedModel {
             @Override
             public BakedModel resolve(BakedModel pModel, ItemStack pStack, @Nullable ClientLevel pLevel, @Nullable LivingEntity pEntity, int pSeed) {
                 var ctx = new BakedModelSupplier.Context(pModel, pStack, pLevel, pEntity, pSeed);
+                // resolve supplier logic
                 var model = modelSupplier.get(ctx);
+                // iterate through the potential chain of model overrides (ie bow pulling modelstates)
                 BakedModel lastModel = null;
                 int itr = 8;
                 do {
@@ -70,7 +85,7 @@ public class PassthroughBakedModel implements BakedModel {
                     }
                     lastModel = model;
                     model = model.getOverrides().resolve(model, pStack, pLevel, pEntity, pSeed);
-                } while (model != lastModel);
+                } while (model != lastModel); // iterate while iterations have an effect
                 rasterizeCallback.accept(model, ctx);
                 return model;
             }
@@ -109,16 +124,18 @@ public class PassthroughBakedModel implements BakedModel {
 
     @Override
     public @NotNull ItemOverrides getOverrides() {
+        // if our model is not yet rasterized, call for our customize override object, which will resolve the model
         return rasterized ? model.getOverrides() : overrides;
-    }
-
-    @Override
-    public @NotNull List<RenderType> getRenderTypes(@NotNull ItemStack itemStack, boolean fabulous) {
-        return List.of(NeoForgeRenderTypes.getItemLayeredTranslucent(handler.value().getAtlasLocation()));
     }
 
     @Override
     public @NotNull ItemTransforms getTransforms() {
         return model.getTransforms();
+    }
+
+    @Override
+    public @NotNull List<RenderType> getRenderTypes(@NotNull ItemStack itemStack, boolean fabulous) {
+        // force textures to be sourced from the given AssetHandler
+        return List.of(NeoForgeRenderTypes.getItemLayeredTranslucent(handler.value().getAtlasLocation()));
     }
 }
