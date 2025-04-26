@@ -17,16 +17,21 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.client.NeoForgeRenderTypes;
 import net.neoforged.neoforge.client.model.EmptyModel;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 public class PassthroughBakedModel implements BakedModel {
     public interface BakedModelSupplier {
-        BakedModel get(BakedModel pModel, ItemStack pStack, @Nullable ClientLevel pLevel, @Nullable LivingEntity pEntity, int pSeed);
+        record Context(BakedModel pModel, ItemStack pStack, @Nullable ClientLevel pLevel,
+                       @Nullable LivingEntity pEntity, int pSeed) {
+        }
+
+        BakedModel get(Context context);
     }
 
     boolean rasterized = false;
@@ -34,13 +39,20 @@ public class PassthroughBakedModel implements BakedModel {
     ItemOverrides overrides;
     Holder<AssetHandler> handler;
 
+    private void resolveChild(ItemOverrides.BakedOverride override, BakedModelSupplier.Context ctx) {
+        if (override.model != null) {
+            override.model.getOverrides().resolve(ctx.pModel, ctx.pStack, ctx.pLevel, ctx.pEntity, ctx.pSeed);
+        }
+    }
+
     public PassthroughBakedModel(Holder<AssetHandler> handler, BakedModelSupplier modelSupplier, ModelBaker baker) {
         this.model = EmptyModel.BAKED;
         this.handler = handler;
         var blockmodel = (BlockModel) baker.getModel(ModelBakery.MISSING_MODEL_LOCATION);
-        Consumer<BakedModel> rasterizeCallback = (baked) -> {
-            this.model = baked;
+        BiConsumer<BakedModel, BakedModelSupplier.Context> rasterizeCallback = (baked, ctx) -> {
             rasterized = true;
+            this.model = baked;
+            this.model.getOverrides().getOverrides().forEach(ovr -> resolveChild(ovr, ctx));
         };
         this.overrides = new ItemOverrides(baker, blockmodel,
                 List.of()
@@ -49,7 +61,8 @@ public class PassthroughBakedModel implements BakedModel {
             @Override
             public BakedModel resolve(BakedModel pModel, ItemStack pStack, @Nullable ClientLevel pLevel, @Nullable LivingEntity pEntity, int pSeed) {
 //                AtlasApi.LOGGER.debug("{} BRRRRT", pEntity == null ? -1 : pEntity.tickCount);
-                var model = modelSupplier.get(pModel, pStack, pLevel, pEntity, pSeed);
+                var ctx = new BakedModelSupplier.Context(pModel, pStack, pLevel, pEntity, pSeed);
+                var model = modelSupplier.get(ctx);
                 BakedModel lastModel = null;
                 int itr = 8;
                 do {
@@ -59,7 +72,7 @@ public class PassthroughBakedModel implements BakedModel {
                     lastModel = model;
                     model = model.getOverrides().resolve(model, pStack, pLevel, pEntity, pSeed);
                 } while (model != lastModel);
-                rasterizeCallback.accept(model);
+                rasterizeCallback.accept(model, ctx);
                 return model;
             }
         };
@@ -102,7 +115,7 @@ public class PassthroughBakedModel implements BakedModel {
 
     @Override
     public @NotNull List<RenderType> getRenderTypes(@NotNull ItemStack itemStack, boolean fabulous) {
-        return List.of(RenderType.entityCutout(handler.value().getAtlasLocation()));
+        return List.of(NeoForgeRenderTypes.getItemLayeredTranslucent(handler.value().getAtlasLocation()));
     }
 
     @Override

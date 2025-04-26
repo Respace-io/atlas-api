@@ -9,7 +9,6 @@ import io.redspace.atlasapi.api.AssetHandler;
 import io.redspace.atlasapi.api.AtlasApiRegistry;
 import io.redspace.atlasapi.api.data.BakingPreparations;
 import io.redspace.atlasapi.api.data.ModelLayer;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockElement;
@@ -22,8 +21,6 @@ import net.minecraft.client.resources.model.ModelState;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.NeoForgeRenderTypes;
 import net.neoforged.neoforge.client.RenderTypeGroup;
 import net.neoforged.neoforge.client.model.CompositeModel;
@@ -36,7 +33,6 @@ import net.neoforged.neoforge.client.model.geometry.UnbakedGeometryHelper;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
@@ -50,10 +46,10 @@ public class DynamicAtlasModel implements IUnbakedGeometry<DynamicAtlasModel> {
 
     @Override
     public BakedModel bake(IGeometryBakingContext context, ModelBaker baker, Function<Material, TextureAtlasSprite> spriteGetter, ModelState modelState, ItemOverrides overrides) {
-        return new PassthroughBakedModel(handler, (BakedModel pModel, ItemStack pStack, @Nullable ClientLevel pLevel, @Nullable LivingEntity pEntity, int pSeed) -> {
+        return new PassthroughBakedModel(handler, ctx -> {
             var _handler = handler.value();
-            int id = _handler.modelId(pStack, pLevel, pEntity, pSeed);
-            return ClientManager.getModelOrCompute(handler.getKey().location(), id, (i) -> bake(_handler, _handler.makeBakedModelPreparations(pStack, pLevel, pEntity, pSeed), context, modelState, overrides));
+            int id = _handler.modelId(ctx.pStack(), ctx.pLevel(),ctx.pEntity(), ctx.pSeed());
+            return ClientManager.getModelOrCompute(handler.getKey().location(), id, (i) -> bake(_handler, _handler.makeBakedModelPreparations(ctx.pStack(), ctx.pLevel(),ctx.pEntity(), ctx.pSeed()), context, modelState, overrides));
         }, baker);
     }
 

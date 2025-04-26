@@ -31,7 +31,7 @@ public class SimpleAtlasModel implements IUnbakedGeometry<SimpleAtlasModel> {
     @Override
     public BakedModel bake(IGeometryBakingContext context, ModelBaker baker, Function<Material, TextureAtlasSprite> spriteGetter, ModelState modelState, ItemOverrides overrides) {
         return new PassthroughBakedModel(handler,
-                (model, stack, levevl, entity, seed) -> {
+                ctx -> {
                     var map = new HashMap<>(unbakedGeometry.textureMap); // swap target atlas to the handler's atlas
                     map.forEach((string, mat) -> unbakedGeometry.textureMap.put(string, mat.mapBoth(material -> new Material(handler.value().getAtlasLocation(), material.texture()), Function.identity())));
                     return unbakedGeometry.bake(baker, m -> handler.value().getSprite(m.texture()), modelState);
