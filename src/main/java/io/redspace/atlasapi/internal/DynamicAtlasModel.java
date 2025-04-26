@@ -50,7 +50,7 @@ public class DynamicAtlasModel implements IUnbakedGeometry<DynamicAtlasModel> {
 
     @Override
     public BakedModel bake(IGeometryBakingContext context, ModelBaker baker, Function<Material, TextureAtlasSprite> spriteGetter, ModelState modelState, ItemOverrides overrides) {
-        return new PassthroughBakedModel((BakedModel pModel, ItemStack pStack, @Nullable ClientLevel pLevel, @Nullable LivingEntity pEntity, int pSeed) -> {
+        return new PassthroughBakedModel(handler, (BakedModel pModel, ItemStack pStack, @Nullable ClientLevel pLevel, @Nullable LivingEntity pEntity, int pSeed) -> {
             var _handler = handler.value();
             int id = _handler.modelId(pStack, pLevel, pEntity, pSeed);
             return ClientManager.getModelOrCompute(handler.getKey().location(), id, (i) -> bake(_handler, _handler.makeBakedModelPreparations(pStack, pLevel, pEntity, pSeed), context, modelState, overrides));
